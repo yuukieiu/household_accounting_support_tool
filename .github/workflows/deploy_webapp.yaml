@@ -20,21 +20,33 @@ jobs:
 
       - name: Create clasp credentials
         run: |
-          echo "${{ secrets.CLASP_CREDS_JSON }}" > ~/.clasprc.json
+          cat <<EOF > ~/.clasprc.json
+          {
+            "token": {
+              "access_token": "${{ secrets.ACCESS_TOKEN }}",
+              "refresh_token": "${{ secrets.REFRESH_TOKEN }}",
+              "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.file",
+              "token_type": "Bearer",
+              "expiry_date": 9999999999999
+            },
+            "oauth2ClientSettings": {
+              "clientId": "${{ secrets.CLIENT_ID }}",
+              "clientSecret": "${{ secrets.CLIENT_SECRET }}"
+            },
+            "isLocalCreds": true
+          }
+          EOF
 
       - name: Push & Update Apps Script
         run: |
           # webappディレクトリに移動
           cd webapp
 
-          # clasp にログイン
-          clasp login --creds ~/.clasprc.json
-
           # コードを push
           clasp push
 
-          # 既存デプロイを更新（URL を維持）
-          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }} --description "Update via GitHub Actions"
+          # 既存デプロイを更新
+          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }}
 
       - name: Set Master Spreadsheet ID
         run: |
