@@ -23,7 +23,6 @@ jobs:
           cat <<EOF > ~/.clasprc.json
           {
             "token": {
-              "access_token": "${{ secrets.ACCESS_TOKEN }}",
               "refresh_token": "${{ secrets.REFRESH_TOKEN }}",
               "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.file",
               "token_type": "Bearer",
