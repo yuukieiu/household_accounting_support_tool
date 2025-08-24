@@ -43,7 +43,7 @@ jobs:
           cd installer
 
           # スプレッドシートに紐づくApps Scriptプロジェクトを作成
-          clasp create --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
+          clasp create --title "家計簿入力支援ツール" --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
 
           # コードをpush
           clasp push -f
