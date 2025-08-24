@@ -44,13 +44,5 @@ jobs:
           # コードを push
           clasp push -f
 
-          # 既存デプロイを更新
-          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }}
-
-      - name: Set Master Spreadsheet ID
-        run: |
-          # webappディレクトリに移動
-          cd webapp
-
-          # GitHub SecretsからマスタスプレッドシートIDを取得してスクリプトプロパティに設定
-          clasp run setMasterSpreadsheetId --params '["${{ secrets.TARGET_SPREADSHEET_ID }}"]'
+          # 既存デプロイを更新（Webアプリケーションとして）
+          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }} --type webapp
