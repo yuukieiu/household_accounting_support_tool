@@ -1,0 +1,45 @@
+name: Deploy Standalone Apps Script
+
+on:
+  workflow_dispatch: # 手動実行用
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install CLASP
+        run: npm install -g @google/clasp
+
+      - name: Create clasp credentials
+        run: |
+          echo "${{ secrets.CLASP_CREDS_JSON }}" > ~/.clasprc.json
+
+      - name: Push & Update Apps Script
+        run: |
+          # webappディレクトリに移動
+          cd webapp
+
+          # clasp にログイン
+          clasp login --creds ~/.clasprc.json
+
+          # コードを push
+          clasp push
+
+          # 既存デプロイを更新（URL を維持）
+          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }} --description "Update via GitHub Actions"
+
+      - name: Set Master Spreadsheet ID
+        run: |
+          # webappディレクトリに移動
+          cd webapp
+
+          # GitHub SecretsからマスタスプレッドシートIDを取得してスクリプトプロパティに設定
+          clasp run setMasterSpreadsheetId --params '["${{ secrets.TARGET_SPREADSHEET_ID }}"]'

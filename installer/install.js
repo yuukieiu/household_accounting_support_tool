@@ -1,5 +1,5 @@
 // トリガーで呼ばれる関数
-function openSidebarOnTrigger(e) {
+function openSidebarOnOpen(e) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   SpreadsheetApp.getUi().createMenu('仕訳入力')
     .addItem('サイドバーを開く', 'showSidebar')

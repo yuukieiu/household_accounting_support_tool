@@ -6,6 +6,13 @@ function getMasterSpreadsheet() {
   return SpreadsheetApp.openById(sheetId);
 }
 
+// GitHub Actionsから呼び出される関数：マスタスプレッドシートIDを設定
+function setMasterSpreadsheetId(sheetId) {
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty("MASTER_SHEET_ID", sheetId);
+  return `MASTER_SHEET_ID を ${sheetId} に設定しました`;
+}
+
 // Webアプリとして開いたときに呼ばれる
 function doGet() {
   // 常にマスタシートを対象とする
