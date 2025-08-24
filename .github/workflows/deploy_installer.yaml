@@ -13,25 +13,44 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install CLASP
         run: npm install -g @google/clasp
 
       - name: Create clasp credentials
         run: |
-          echo "${{ secrets.CLASP_CREDS_JSON }}" > ~/.clasprc.json
+          cat <<EOF > ~/.clasprc.json
+          {
+            "token": {
+              "refresh_token": "${{ secrets.REFRESH_TOKEN }}",
+              "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.file",
+              "token_type": "Bearer",
+              "expiry_date": 9999999999999
+            },
+            "oauth2ClientSettings": {
+              "clientId": "${{ secrets.CLIENT_ID }}",
+              "clientSecret": "${{ secrets.CLIENT_SECRET }}"
+            },
+            "isLocalCreds": true
+          }
+          EOF
 
-      - name: Push & Update Bound Apps Script
+      - name: Copy backend.js to installer directory
+        run: |
+          # backend.jsをinstallerディレクトリにコピー
+          cp webapp/backend.js installer/backend.js
+          echo "backend.jsをinstallerディレクトリにコピーしました"
+
+      - name: Create & Push Bound Apps Script
         run: |
           # installerディレクトリに移動
           cd installer
 
-          # clasp にログイン
-          clasp login --creds ~/.clasprc.json
+          # スプレッドシートに紐づくApps Scriptプロジェクトを作成
+          clasp create --title "家計簿入力支援ツール" --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
 
-          # GitHub Secretsから対象スプレッドシートIDを取得してデプロイ
-          clasp push --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
+          # コードをpush
+          clasp push -f
 
-          # 既存デプロイを更新（URL を維持）
-          clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }} --description "Update via GitHub Actions"
+          echo "新しい家計簿入力支援ツールがインストールされました。古い家計簿入力支援ツールプロジェクトは削除してください。"
