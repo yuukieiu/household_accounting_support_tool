@@ -37,13 +37,90 @@ jobs:
           }
           EOF
 
+      - name: Copy backend.js to installer directory
+        run: |
+          # backend.jsをinstallerディレクトリにコピー
+          cp webapp/backend.js installer/backend.js
+          echo "backend.jsをinstallerディレクトリにコピーしました"
+
       - name: Create & Push Bound Apps Script
         run: |
           # installerディレクトリに移動
           cd installer
 
-          # スプレッドシートに紐づくApps Scriptプロジェクトを作成
-          clasp create --title "家計簿入力支援ツール" --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
+          echo "TARGET_SPREADSHEET_IDに紐づくプロジェクトを検索中..."
 
-          # コードをpush
-          clasp push -f
+          # 新しくプロジェクトを作成する関数
+          create_new_project() {
+            echo "新しいプロジェクトを作成します。"
+            # スプレッドシートに紐づくApps Scriptプロジェクトを作成
+            clasp create --title "家計簿入力支援ツール" --parentId "${{ secrets.TARGET_SPREADSHEET_ID }}"
+
+            echo "新しいプロジェクトが作成されました。"
+
+            # コードをpush
+            clasp push -f
+          }
+
+          # 既存のプロジェクト一覧を取得
+          PROJECT_LIST=$(clasp list 2>/dev/null || echo "")
+
+          if [ -n "$PROJECT_LIST" ]; then
+            echo "既存のプロジェクト一覧:"
+            echo "$PROJECT_LIST"
+
+            # プロジェクト名が「家計簿入力支援ツール」のものだけに絞り込み
+            TARGET_PROJECTS=$(echo "$PROJECT_LIST" | grep "家計簿入力支援ツール" || echo "")
+
+            if [ -n "$TARGET_PROJECTS" ]; then
+              echo "プロジェクト名「家計簿入力支援ツール」のプロジェクトが見つかりました:"
+              # スクリプトIDを除いてプロジェクト名のみを表示
+              echo "$TARGET_PROJECTS" | awk '{$1=""; print "プロジェクト名:" substr($0,2)}'
+
+              # 絞り込まれたプロジェクトのparentIdをApps Script APIで確認
+              FOUND_PROJECT=""
+              while IFS= read -r line; do
+                if [ -n "$line" ]; then
+                  SCRIPT_ID=$(echo "$line" | awk '{print $1}')
+                  PROJECT_NAME=$(echo "$line" | awk '{$1=""; print substr($0,2)}')
+
+                  echo "プロジェクト「$PROJECT_NAME」($SCRIPT_ID)のparentIdを確認中..."
+
+                  # Apps Script APIでプロジェクト情報を取得
+                  PROJECT_INFO=$(curl -s -H "Authorization: Bearer ${{ secrets.ACCESS_TOKEN }}" \
+                    "https://script.googleapis.com/v1/projects/$SCRIPT_ID" 2>/dev/null || echo "")
+
+                  if [ -n "$PROJECT_INFO" ]; then
+                    # parentIdを抽出
+                    PARENT_ID=$(echo "$PROJECT_INFO" | grep -o '"parentId":"[^"]*"' | cut -d'"' -f4)
+
+                    if [ "$PARENT_ID" = "${{ secrets.TARGET_SPREADSHEET_ID }}" ]; then
+                      echo "TARGET_SPREADSHEET_IDに紐づいているプロジェクト「$PROJECT_NAME」が見つかりました！"
+                      FOUND_PROJECT="$SCRIPT_ID"
+                      break
+                    else
+                      echo "プロジェクト「$PROJECT_NAME」のparentId: [非表示] (TARGET_SPREADSHEET_IDと一致しません)"
+                    fi
+                  else
+                    echo "プロジェクト「$PROJECT_NAME」の情報を取得できませんでした"
+                  fi
+                fi
+              done <<< "$TARGET_PROJECTS"
+
+              if [ -n "$FOUND_PROJECT" ]; then
+                # 既存プロジェクトの.clasp.jsonファイルを作成
+                echo "{\"scriptId\": \"$FOUND_PROJECT\", \"parentId\": \"${{ secrets.TARGET_SPREADSHEET_ID }}\"}" > .clasp.json
+                echo "既存プロジェクトにpushします。"
+                clasp push -f
+              else
+                echo "TARGET_SPREADSHEET_IDに紐づいているプロジェクトが見つかりませんでした。"
+                create_new_project
+              fi
+            else
+              echo "プロジェクト名「家計簿入力支援ツール」のプロジェクトが見つかりませんでした。"
+              create_new_project
+            fi
+          else
+            echo "既存のプロジェクトが見つかりませんでした。"
+            create_new_project
+          fi
