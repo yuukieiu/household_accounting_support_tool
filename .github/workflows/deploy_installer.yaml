@@ -1,4 +1,4 @@
-name: Deploy Bound Apps Script
+name: deploy_installer
 
 on:
   workflow_dispatch: # 手動実行用

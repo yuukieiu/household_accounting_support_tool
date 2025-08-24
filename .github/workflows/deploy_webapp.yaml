@@ -1,4 +1,4 @@
-name: Deploy Standalone Apps Script
+name: deploy_webapp
 
 on:
   workflow_dispatch: # 手動実行用
