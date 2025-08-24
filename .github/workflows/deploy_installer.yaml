@@ -36,6 +36,12 @@ jobs:
           }
           EOF
 
+      - name: Copy backend.js to installer directory
+        run: |
+          # backend.jsをinstallerディレクトリにコピー
+          cp webapp/backend.js installer/backend.js
+          echo "backend.jsをinstallerディレクトリにコピーしました"
+
       - name: Create & Push Bound Apps Script
         run: |
           # installerディレクトリに移動
