@@ -43,7 +43,7 @@ jobs:
           cd webapp
 
           # コードを push
-          clasp push
+          clasp push -f
 
           # 既存デプロイを更新
           clasp deploy --deploymentId ${{ secrets.CLASP_DEPLOYMENT_ID }}
