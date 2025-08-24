@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fadeinout {
+      0% { opacity: 0; transform: translateY(48px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(48px); }
+    }
+    .animate-fadeinout { animation: fadeinout 3s forwards; }
+    .error { border-color: red !important; }
+  </style>
+</head>
+<body class="bg-gray-100 p-0 text-5xl leading-relaxed">
+
+  <!-- 🔹 ローディングオーバーレイ -->
+  <div id="loadingOverlay" class="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+    <div class="w-24 h-24 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-12 text-5xl font-bold text-gray-700">読み込み中...</p>
+  </div>
+
+  <!-- 上部固定スプレッドシート情報 -->
+  <div id="spreadsheet-info" class="fixed top-0 left-0 right-0 z-40 bg-white shadow-2xl p-12 text-center rounded-b-2xl">
+    <h2 id="sheet-name" class="text-6xl font-bold mb-10"></h2>
+    <button id="open-sheet" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-12 rounded-xl text-5xl">
+      スプレッドシートを開く
+    </button>
+  </div>
+
+  <!-- 入力フォーム -->
+  <div class="pt-[360px] px-12 space-y-12 mb-24">
+    <div class="bg-white shadow-2xl rounded-xl p-12 space-y-12">
+      
+      <!-- 取引タイプ（トグルボタン） -->
+      <div>
+        <div class="mt-6 flex space-x-24">
+          <button id="type-income" type="button" class="flex-1 py-8 text-5xl font-bold rounded-full bg-gray-300 text-gray-700">
+            収入
+          </button>
+          <button id="type-expense" type="button" class="flex-1 py-8 text-5xl font-bold rounded-full bg-blue-500 text-white">
+            支出
+          </button>
+        </div>
+      </div>
+
+      <!-- 取引日 -->
+      <div>
+        <span class="text-red-500 font-bold">*</span> 取引日
+        <input type="date" id="date" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl">
+      </div>
+
+      <!-- 取引手段 -->
+      <div>
+        <span class="text-red-500 font-bold">*</span> 取引手段
+        <select id="payment" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl"></select>
+      </div>
+
+      <!-- 相手科目 -->
+      <div>
+        <span class="text-red-500 font-bold">*</span> 相手科目
+        <select id="purpose" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl"></select>
+      </div>
+
+      <!-- 金額 -->
+      <div>
+        <span class="text-red-500 font-bold">*</span> 金額
+        <input type="number" id="amount" inputmode="numeric" pattern="[0-9]*" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl">
+      </div>
+
+      <!-- 摘要 -->
+      <div>
+        <span class="text-red-500 font-bold">*</span> 摘要
+        <input type="text" id="description" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl">
+      </div>
+
+      <!-- 登録ボタン -->
+      <button onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl">
+        登録
+      </button>
+
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast-container" class="fixed bottom-48 right-6 z-50"></div>
+
+  <script>
+    let paymentValues = [], purposeValues = [];
+    let selectedType = "支出"; // 初期選択は支出
+    let spreadsheetLoaded = false;
+    let accountsLoaded = false;
+
+    const btnIncome = document.getElementById("type-income");
+    const btnExpense = document.getElementById("type-expense");
+
+    function selectType(type) {
+      selectedType = type;
+      if (type === "収入") {
+        btnIncome.className = "flex-1 py-8 text-5xl font-bold rounded-full bg-blue-500 text-white";
+        btnExpense.className = "flex-1 py-8 text-5xl font-bold rounded-full bg-gray-300 text-gray-700";
+      } else {
+        btnIncome.className = "flex-1 py-8 text-5xl font-bold rounded-full bg-gray-300 text-gray-700";
+        btnExpense.className = "flex-1 py-8 text-5xl font-bold rounded-full bg-blue-500 text-white";
+      }
+    }
+
+    btnIncome.addEventListener("click", () => selectType("収入"));
+    btnExpense.addEventListener("click", () => selectType("支出"));
+
+    // デフォルトで取引日に今日の日付を設定
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("date").value = new Date().toISOString().slice(0,10);
+    });
+
+    function hideLoadingIfReady() {
+      if (spreadsheetLoaded && accountsLoaded) {
+        document.getElementById("loadingOverlay").style.display = "none";
+      }
+    }
+
+    // 🔹 スプレッドシート情報取得
+    google.script.run.withSuccessHandler(function(info) {
+      document.getElementById("sheet-name").innerText = info.name;
+      document.getElementById("open-sheet").onclick = function() {
+        window.open(info.url, "_blank");
+      };
+      spreadsheetLoaded = true;
+      hideLoadingIfReady();
+    }).getSpreadsheetInfo();
+
+    // 🔹 アカウント情報取得
+    google.script.run.withSuccessHandler(function(accounts){
+      const paymentList = accounts.filter(acc => ["資産","負債","純資産"].includes(acc.category));
+      const purposeList = accounts.filter(acc => ["費用","収益","純資産","負債"].includes(acc.category));
+
+      const paymentSelect = document.getElementById("payment");
+      const purposeSelect = document.getElementById("purpose");
+
+      paymentValues = paymentList.map(acc => acc.name);
+      purposeValues = purposeList.map(acc => acc.name);
+
+      paymentList.forEach(acc => {
+        const o = document.createElement("option");
+        o.value = acc.name;
+        o.text = acc.display;
+        paymentSelect.appendChild(o);
+      });
+
+      purposeList.forEach(acc => {
+        const o = document.createElement("option");
+        o.value = acc.name;
+        o.text = acc.display;
+        purposeSelect.appendChild(o);
+      });
+
+      accountsLoaded = true;
+      hideLoadingIfReady();
+    }).getAccounts();
+
+    function showToast(msg) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "bg-green-500 text-white animate-fadeinout px-8 py-6 rounded-xl mb-6";
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    function submitData() {
+      let valid = true;
+      const type = selectedType;
+      const dateEl = document.getElementById("date");
+      const paymentEl = document.getElementById("payment");
+      const purposeEl = document.getElementById("purpose");
+      const amountEl = document.getElementById("amount");
+      const descriptionEl = document.getElementById("description");
+
+      [dateEl,paymentEl,purposeEl,amountEl,descriptionEl].forEach(el => el.classList.remove("error"));
+
+      if(!dateEl.value) { dateEl.classList.add("error"); valid = false; }
+      if(!paymentValues.includes(paymentEl.value)) { paymentEl.classList.add("error"); valid = false; }
+      if(!purposeValues.includes(purposeEl.value)) { purposeEl.classList.add("error"); valid = false; }
+      const amount = Number(amountEl.value);
+      if(!(amount>=0)) { amountEl.classList.add("error"); valid = false; }
+      const description = descriptionEl.value.trim();
+      if(description.length ===0) { descriptionEl.classList.add("error"); valid = false; }
+
+      if(!valid) return;
+
+      let debitName, creditName;
+      if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
+      else { debitName = purposeEl.value; creditName = paymentEl.value; }
+
+      google.script.run.withSuccessHandler(() => {
+        try {
+          dateEl.value = new Date().toISOString().slice(0,10); // 登録後も今日を入れる
+          amountEl.value = "";
+          descriptionEl.value = "";
+          showToast("入力完了");
+        } catch(e) { console.error(e); }
+      }).addJournalEntry({
+        type, payment: paymentEl.value, purpose: purposeEl.value,
+        date: dateEl.value, debitName, creditName,
+        debitAmount: amount, description
+      });
+    }
+  </script>
+</body>
+</html>
