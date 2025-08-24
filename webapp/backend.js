@@ -6,30 +6,6 @@ function getMasterSpreadsheet() {
   return SpreadsheetApp.openById(sheetId);
 }
 
-// GitHub Actionsから呼び出される関数：マスタスプレッドシートIDを設定
-function setMasterSpreadsheetId(sheetId) {
-  const props = PropertiesService.getScriptProperties();
-  props.setProperty("MASTER_SHEET_ID", sheetId);
-  return `MASTER_SHEET_ID を ${sheetId} に設定しました`;
-}
-
-// Webアプリとして開いたときに呼ばれる
-function doGet() {
-  // 常にマスタシートを対象とする
-  return HtmlService.createHtmlOutputFromFile('webapp')
-      .setTitle('仕訳入力')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-// スプレッドシート情報取得
-function getSpreadsheetInfo() {
-  const ss = getMasterSpreadsheet();
-  return {
-    name: ss.getName(),
-    url: ss.getUrl()
-  };
-}
-
 // 勘定科目取得
 function getAccounts() {
   const sheet = getMasterSpreadsheet().getSheetByName("勘定科目");
@@ -43,7 +19,6 @@ function getAccounts() {
       display: row[1] + " " + row[2]  // プルダウン表示
     }));
 }
-
 // 仕訳日記帳に追加
 function addJournalEntry(entry) {
   const sheet = getMasterSpreadsheet().getSheetByName("仕訳日記帳");

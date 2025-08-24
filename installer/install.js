@@ -20,10 +20,25 @@ function createOnOpenTriggerOnce() {
   const props = PropertiesService.getScriptProperties();
   if (props.getProperty("TRIGGER_CREATED")) return; // すでに作成済みならスキップ
 
+  // 現在のスプレッドシートのIDをMASTER_SHEET_IDとして設定
+  const currentSheetId = ss.getId();
+  props.setProperty("MASTER_SHEET_ID", currentSheetId);
+
+  // 設定完了を通知
+  const ui = SpreadsheetApp.getUi();
+  ui.alert(
+    '設定完了',
+    `MASTER_SHEET_IDを現在のスプレッドシートID（${currentSheetId}）に設定しました。`,
+    ui.ButtonSet.OK
+  );
+
+  // トリガーを作成
   ScriptApp.newTrigger('openSidebarOnOpen')
     .forSpreadsheet(ss)
     .onOpen()
     .create();
 
   props.setProperty("TRIGGER_CREATED", "true"); // 作成済みフラグを設定
+
+  ui.alert('完了', 'トリガーが正常に作成されました。', ui.ButtonSet.OK);
 }
