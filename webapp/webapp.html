@@ -33,7 +33,7 @@
   <!-- 入力フォーム -->
   <div class="pt-[360px] px-12 space-y-12 mb-24">
     <div class="bg-white shadow-2xl rounded-xl p-12 space-y-12">
-      
+
       <!-- 取引タイプ（トグルボタン） -->
       <div>
         <div class="mt-6 flex space-x-24">
@@ -113,6 +113,11 @@
     // デフォルトで取引日に今日の日付を設定
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("date").value = new Date().toISOString().slice(0,10);
+    });
+
+    // 日付フィールドをクリックしたときに今日の日付を設定
+    document.getElementById("date").addEventListener("click", function() {
+      this.value = new Date().toISOString().slice(0,10);
     });
 
     function hideLoadingIfReady() {
