@@ -3,6 +3,8 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <style>
     @keyframes fadeinout {
       0% { opacity: 0; transform: translateY(48px); }
@@ -49,7 +51,7 @@
       <!-- 取引日 -->
       <div>
         <span class="text-red-500 font-bold">*</span> 取引日
-        <input type="date" id="date" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl">
+        <input type="text" id="date" class="mt-6 w-full border-4 border-gray-300 rounded-xl p-12 text-5xl">
       </div>
 
       <!-- 取引手段 -->
@@ -113,11 +115,10 @@
     // デフォルトで取引日に今日の日付を設定
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("date").value = new Date().toISOString().slice(0,10);
-    });
 
-    // 日付フィールドをクリックしたときに今日の日付を設定
-    document.getElementById("date").addEventListener("click", function() {
-      this.value = new Date().toISOString().slice(0,10);
+      flatpickr("#date", {
+        dateFormat: "Y-m-d",
+      });
     });
 
     function hideLoadingIfReady() {
@@ -125,6 +126,11 @@
         document.getElementById("loadingOverlay").style.display = "none";
       }
     }
+
+    // 日付フィールドをクリックしたときに今日の日付を設定
+    document.getElementById("date").addEventListener("click", function() {
+      this.value = new Date().toISOString().slice(0,10);
+    });
 
     // 🔹 スプレッドシート情報取得
     google.script.run.withSuccessHandler(function(info) {
