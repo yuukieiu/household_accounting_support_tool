@@ -120,8 +120,8 @@
   <div id="toast-container" class="fixed bottom-48 right-6 z-50"></div>
 
   <!-- 登録処理中のローディングオーバーレイ -->
-  <div id="submitLoadingOverlay" class="submit-loading-overlay">
-    <div class="submit-spinner"></div>
+  <div id="submitLoadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50" style="display: none;">
+    <div class="w-24 h-24 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
   </div>
 
   <script>
@@ -242,30 +242,16 @@
       }
 
       // 登録ボタンを非活性化し、ローディングオーバーレイを表示
-      // 複数の方法で確実に適用
+      // 初期読み込みのオーバーレイと同じ方法を使用
       submitBtn.setAttribute("disabled", "disabled");
       submitBtn.disabled = true;
-      submitBtn.classList.add("submit-btn-disabled");
       submitBtn.style.pointerEvents = "none";
       submitBtn.style.opacity = "0.6";
       submitBtn.style.backgroundColor = "#9ca3af";
       submitBtn.style.cursor = "not-allowed";
 
-      // オーバーレイを表示
+      // オーバーレイを表示（初期読み込みと同じ方法）
       submitLoadingOverlay.style.display = "flex";
-      submitLoadingOverlay.style.visibility = "visible";
-      submitLoadingOverlay.style.opacity = "1";
-      submitLoadingOverlay.classList.add("active");
-
-      // 強制的に再描画を確実に行う
-      submitBtn.style.display = "block";
-      submitLoadingOverlay.style.zIndex = "99999";
-
-      // リフローを強制（複数回実行）
-      void submitBtn.offsetHeight;
-      void submitLoadingOverlay.offsetHeight;
-      void submitBtn.offsetWidth;
-      void submitLoadingOverlay.offsetWidth;
 
       let debitName, creditName;
       if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
@@ -282,15 +268,11 @@
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
         submitBtn.removeAttribute("disabled");
         submitBtn.disabled = false;
-        submitBtn.classList.remove("submit-btn-disabled");
         submitBtn.style.pointerEvents = "";
         submitBtn.style.opacity = "";
         submitBtn.style.backgroundColor = "";
         submitBtn.style.cursor = "";
         submitLoadingOverlay.style.display = "none";
-        submitLoadingOverlay.style.visibility = "hidden";
-        submitLoadingOverlay.style.opacity = "0";
-        submitLoadingOverlay.classList.remove("active");
       };
 
       // エラー時のコールバック
@@ -300,15 +282,11 @@
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
         submitBtn.removeAttribute("disabled");
         submitBtn.disabled = false;
-        submitBtn.classList.remove("submit-btn-disabled");
         submitBtn.style.pointerEvents = "";
         submitBtn.style.opacity = "";
         submitBtn.style.backgroundColor = "";
         submitBtn.style.cursor = "";
         submitLoadingOverlay.style.display = "none";
-        submitLoadingOverlay.style.visibility = "hidden";
-        submitLoadingOverlay.style.opacity = "0";
-        submitLoadingOverlay.classList.remove("active");
       };
 
       // ブラウザがスタイルの変更を反映する時間を与えるため、少し遅延させてから実行
