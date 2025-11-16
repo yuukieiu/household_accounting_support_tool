@@ -12,6 +12,33 @@
     }
     .animate-fadeinout { animation: fadeinout 3s forwards; }
     .error { border-color: red !important; }
+    .submit-loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .submit-loading-overlay.active {
+      display: flex;
+    }
+    .submit-spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3b82f6;
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body class="bg-gray-100 p-0 text-5xl leading-relaxed">
@@ -33,7 +60,7 @@
   <!-- 入力フォーム -->
   <div class="pt-[360px] px-12 space-y-12 mb-24">
     <div class="bg-white shadow-2xl rounded-xl p-12 space-y-12">
-      
+
       <!-- 取引タイプ（トグルボタン） -->
       <div>
         <div class="mt-6 flex space-x-24">
@@ -77,7 +104,7 @@
       </div>
 
       <!-- 登録ボタン -->
-      <button onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl">
+      <button id="submitBtn" onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl disabled:bg-gray-400 disabled:cursor-not-allowed">
         登録
       </button>
 
@@ -86,6 +113,11 @@
 
   <!-- トースト通知 -->
   <div id="toast-container" class="fixed bottom-48 right-6 z-50"></div>
+
+  <!-- 登録処理中のローディングオーバーレイ -->
+  <div id="submitLoadingOverlay" class="submit-loading-overlay">
+    <div class="submit-spinner"></div>
+  </div>
 
   <script>
     let paymentValues = [], purposeValues = [];
@@ -177,6 +209,8 @@
       const purposeEl = document.getElementById("purpose");
       const amountEl = document.getElementById("amount");
       const descriptionEl = document.getElementById("description");
+      const submitBtn = document.getElementById("submitBtn");
+      const submitLoadingOverlay = document.getElementById("submitLoadingOverlay");
 
       [dateEl,paymentEl,purposeEl,amountEl,descriptionEl].forEach(el => el.classList.remove("error"));
 
@@ -190,22 +224,44 @@
 
       if(!valid) return;
 
+      // 登録ボタンを非活性化し、ローディングオーバーレイを表示
+      submitBtn.disabled = true;
+      submitLoadingOverlay.classList.add("active");
+
       let debitName, creditName;
       if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
       else { debitName = purposeEl.value; creditName = paymentEl.value; }
 
-      google.script.run.withSuccessHandler(() => {
+      // 処理完了時のコールバック（成功時）
+      const onSuccess = () => {
         try {
           dateEl.value = new Date().toISOString().slice(0,10); // 登録後も今日を入れる
           amountEl.value = "";
           descriptionEl.value = "";
           showToast("入力完了");
         } catch(e) { console.error(e); }
-      }).addJournalEntry({
-        type, payment: paymentEl.value, purpose: purposeEl.value,
-        date: dateEl.value, debitName, creditName,
-        debitAmount: amount, description
-      });
+        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
+        submitBtn.disabled = false;
+        submitLoadingOverlay.classList.remove("active");
+      };
+
+      // エラー時のコールバック
+      const onFailure = (error) => {
+        console.error("登録エラー:", error);
+        showToast("登録に失敗しました");
+        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
+        submitBtn.disabled = false;
+        submitLoadingOverlay.classList.remove("active");
+      };
+
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .addJournalEntry({
+          type, payment: paymentEl.value, purpose: purposeEl.value,
+          date: dateEl.value, debitName, creditName,
+          debitAmount: amount, description
+        });
     }
   </script>
 </body>
