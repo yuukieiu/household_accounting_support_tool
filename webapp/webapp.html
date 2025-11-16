@@ -207,6 +207,7 @@
     }
 
     function submitData() {
+      console.log("submitData関数が呼ばれました");
       let valid = true;
       const type = selectedType;
       const dateEl = document.getElementById("date");
@@ -216,6 +217,9 @@
       const descriptionEl = document.getElementById("description");
       const submitBtn = document.getElementById("submitBtn");
       const submitLoadingOverlay = document.getElementById("submitLoadingOverlay");
+
+      console.log("submitBtn:", submitBtn);
+      console.log("submitLoadingOverlay:", submitLoadingOverlay);
 
       // 要素の存在確認
       if (!submitBtn) {
@@ -237,13 +241,37 @@
       const description = descriptionEl.value.trim();
       if(description.length ===0) { descriptionEl.classList.add("error"); valid = false; }
 
-      if(!valid) return;
+      console.log("バリデーション結果:", valid);
+      if(!valid) {
+        console.log("バリデーションエラーのため処理を中断");
+        return;
+      }
 
+      console.log("ボタンを非活性化し、ローディングを表示します");
       // 登録ボタンを非活性化し、ローディングオーバーレイを表示
+      // 複数の方法で確実に適用
+      submitBtn.setAttribute("disabled", "disabled");
       submitBtn.disabled = true;
       submitBtn.classList.add("submit-btn-disabled");
+      submitBtn.style.pointerEvents = "none";
+      submitBtn.style.opacity = "0.6";
+      submitBtn.style.backgroundColor = "#9ca3af";
+      submitBtn.style.cursor = "not-allowed";
+
+      // オーバーレイを表示
       submitLoadingOverlay.style.display = "flex";
+      submitLoadingOverlay.style.visibility = "visible";
+      submitLoadingOverlay.style.opacity = "1";
       submitLoadingOverlay.classList.add("active");
+
+      // 強制的に再描画
+      submitBtn.offsetHeight; // リフローを強制
+      submitLoadingOverlay.offsetHeight; // リフローを強制
+
+      console.log("ボタンのdisabled状態:", submitBtn.disabled, submitBtn.getAttribute("disabled"));
+      console.log("オーバーレイのdisplay:", submitLoadingOverlay.style.display);
+      console.log("オーバーレイのvisibility:", submitLoadingOverlay.style.visibility);
+      console.log("オーバーレイのクラス:", submitLoadingOverlay.className);
 
       let debitName, creditName;
       if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
@@ -258,9 +286,16 @@
           showToast("入力完了");
         } catch(e) { console.error(e); }
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
+        submitBtn.removeAttribute("disabled");
         submitBtn.disabled = false;
         submitBtn.classList.remove("submit-btn-disabled");
+        submitBtn.style.pointerEvents = "";
+        submitBtn.style.opacity = "";
+        submitBtn.style.backgroundColor = "";
+        submitBtn.style.cursor = "";
         submitLoadingOverlay.style.display = "none";
+        submitLoadingOverlay.style.visibility = "hidden";
+        submitLoadingOverlay.style.opacity = "0";
         submitLoadingOverlay.classList.remove("active");
       };
 
@@ -269,9 +304,16 @@
         console.error("登録エラー:", error);
         showToast("登録に失敗しました");
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
+        submitBtn.removeAttribute("disabled");
         submitBtn.disabled = false;
         submitBtn.classList.remove("submit-btn-disabled");
+        submitBtn.style.pointerEvents = "";
+        submitBtn.style.opacity = "";
+        submitBtn.style.backgroundColor = "";
+        submitBtn.style.cursor = "";
         submitLoadingOverlay.style.display = "none";
+        submitLoadingOverlay.style.visibility = "hidden";
+        submitLoadingOverlay.style.opacity = "0";
         submitLoadingOverlay.classList.remove("active");
       };
 
