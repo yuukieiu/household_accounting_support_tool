@@ -109,7 +109,7 @@
       </div>
 
       <!-- 登録ボタン -->
-      <button id="submitBtn" onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl">
+      <button id="submitBtn" onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl disabled:bg-gray-400 disabled:cursor-not-allowed">
         登録
       </button>
 
@@ -120,8 +120,8 @@
   <div id="toast-container" class="fixed bottom-48 right-6 z-50"></div>
 
   <!-- 登録処理中のローディングオーバーレイ -->
-  <div id="submitLoadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50" style="display: none;">
-    <div class="w-24 h-24 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  <div id="submitLoadingOverlay" class="submit-loading-overlay">
+    <div class="submit-spinner"></div>
   </div>
 
   <script>
@@ -241,25 +241,10 @@
         return;
       }
 
-      // ボタンの元のテキストを保存
-      const originalText = submitBtn.textContent;
-
-      // 登録ボタンを非活性化（確実に動作する方法）
-      // 複数の方法で確実に適用
+      // 登録ボタンを非活性化し、ローディングオーバーレイを表示
+      // installerと同じシンプルな方法を使用
       submitBtn.disabled = true;
-      submitBtn.setAttribute("disabled", "disabled");
-      submitBtn.setAttribute("aria-disabled", "true");
-      submitBtn.style.pointerEvents = "none";
-      submitBtn.style.opacity = "0.6";
-      submitBtn.style.backgroundColor = "#9ca3af";
-      submitBtn.style.cursor = "not-allowed";
-      submitBtn.style.userSelect = "none";
-
-      // ボタンのテキストを変更して視覚的に確認
-      submitBtn.textContent = "登録中...";
-
-      // 強制的に再描画
-      submitBtn.offsetHeight;
+      submitLoadingOverlay.classList.add("active");
 
       let debitName, creditName;
       if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
@@ -273,51 +258,28 @@
           descriptionEl.value = "";
           showToast("入力完了");
         } catch(e) { console.error(e); }
-        // 登録ボタンを再有効化
+        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
         submitBtn.disabled = false;
-        submitBtn.removeAttribute("disabled");
-        submitBtn.removeAttribute("aria-disabled");
-        submitBtn.style.pointerEvents = "";
-        submitBtn.style.opacity = "";
-        submitBtn.style.backgroundColor = "";
-        submitBtn.style.cursor = "";
-        submitBtn.style.userSelect = "";
-        submitBtn.textContent = originalText;
-        submitLoadingOverlay.style.display = "none";
+        submitLoadingOverlay.classList.remove("active");
       };
 
       // エラー時のコールバック
       const onFailure = (error) => {
         console.error("登録エラー:", error);
         showToast("登録に失敗しました");
-        // 登録ボタンを再有効化
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.removeAttribute("disabled");
-          submitBtn.removeAttribute("aria-disabled");
-          submitBtn.style.pointerEvents = "";
-          submitBtn.style.opacity = "";
-          submitBtn.style.backgroundColor = "";
-          submitBtn.style.cursor = "";
-          submitBtn.style.userSelect = "";
-          submitBtn.textContent = originalText;
-        }
-        if (submitLoadingOverlay) {
-          submitLoadingOverlay.style.display = "none";
-        }
+        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
+        submitBtn.disabled = false;
+        submitLoadingOverlay.classList.remove("active");
       };
 
-      // ブラウザがスタイルの変更を反映する時間を与えるため、少し遅延させてから実行
-      setTimeout(() => {
-        google.script.run
-          .withSuccessHandler(onSuccess)
-          .withFailureHandler(onFailure)
-          .addJournalEntry({
-            type, payment: paymentEl.value, purpose: purposeEl.value,
-            date: dateEl.value, debitName, creditName,
-            debitAmount: amount, description
-          });
-      }, 50);
+      google.script.run
+        .withSuccessHandler(onSuccess)
+        .withFailureHandler(onFailure)
+        .addJournalEntry({
+          type, payment: paymentEl.value, purpose: purposeEl.value,
+          date: dateEl.value, debitName, creditName,
+          debitAmount: amount, description
+        });
     }
   </script>
 </body>
