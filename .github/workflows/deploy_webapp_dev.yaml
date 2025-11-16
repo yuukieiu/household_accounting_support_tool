@@ -19,6 +19,27 @@ jobs:
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
 
+      - name: Create .clasp.json for development
+        run: |
+          cat > webapp/.clasp.json <<EOF
+          {
+            "scriptId": "${{ secrets.DEV_CLASP_SCRIPT_ID }}",
+            "rootDir": "",
+            "scriptExtensions": [
+              ".js",
+              ".gs"
+            ],
+            "htmlExtensions": [
+              ".html"
+            ],
+            "jsonExtensions": [
+              ".json"
+            ],
+            "filePushOrder": [],
+            "skipSubdirectories": false
+          }
+          EOF
+
       - name: Push & Update Apps Script
         run: |
           # webappディレクトリに移動
