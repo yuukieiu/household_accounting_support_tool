@@ -241,17 +241,25 @@
         return;
       }
 
-      // 登録ボタンを非活性化し、ローディングオーバーレイを表示
-      // 初期読み込みのオーバーレイと同じ方法を使用
-      submitBtn.setAttribute("disabled", "disabled");
+      // ボタンの元のテキストを保存
+      const originalText = submitBtn.textContent;
+
+      // 登録ボタンを非活性化（確実に動作する方法）
+      // 複数の方法で確実に適用
       submitBtn.disabled = true;
+      submitBtn.setAttribute("disabled", "disabled");
+      submitBtn.setAttribute("aria-disabled", "true");
       submitBtn.style.pointerEvents = "none";
       submitBtn.style.opacity = "0.6";
       submitBtn.style.backgroundColor = "#9ca3af";
       submitBtn.style.cursor = "not-allowed";
+      submitBtn.style.userSelect = "none";
 
-      // オーバーレイを表示（初期読み込みと同じ方法）
-      submitLoadingOverlay.style.display = "flex";
+      // ボタンのテキストを変更して視覚的に確認
+      submitBtn.textContent = "登録中...";
+
+      // 強制的に再描画
+      submitBtn.offsetHeight;
 
       let debitName, creditName;
       if(type==="収入") { debitName = paymentEl.value; creditName = purposeEl.value; }
@@ -265,13 +273,16 @@
           descriptionEl.value = "";
           showToast("入力完了");
         } catch(e) { console.error(e); }
-        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
-        submitBtn.removeAttribute("disabled");
+        // 登録ボタンを再有効化
         submitBtn.disabled = false;
+        submitBtn.removeAttribute("disabled");
+        submitBtn.removeAttribute("aria-disabled");
         submitBtn.style.pointerEvents = "";
         submitBtn.style.opacity = "";
         submitBtn.style.backgroundColor = "";
         submitBtn.style.cursor = "";
+        submitBtn.style.userSelect = "";
+        submitBtn.textContent = originalText;
         submitLoadingOverlay.style.display = "none";
       };
 
@@ -279,14 +290,21 @@
       const onFailure = (error) => {
         console.error("登録エラー:", error);
         showToast("登録に失敗しました");
-        // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
-        submitBtn.removeAttribute("disabled");
-        submitBtn.disabled = false;
-        submitBtn.style.pointerEvents = "";
-        submitBtn.style.opacity = "";
-        submitBtn.style.backgroundColor = "";
-        submitBtn.style.cursor = "";
-        submitLoadingOverlay.style.display = "none";
+        // 登録ボタンを再有効化
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute("disabled");
+          submitBtn.removeAttribute("aria-disabled");
+          submitBtn.style.pointerEvents = "";
+          submitBtn.style.opacity = "";
+          submitBtn.style.backgroundColor = "";
+          submitBtn.style.cursor = "";
+          submitBtn.style.userSelect = "";
+          submitBtn.textContent = originalText;
+        }
+        if (submitLoadingOverlay) {
+          submitLoadingOverlay.style.display = "none";
+        }
       };
 
       // ブラウザがスタイルの変更を反映する時間を与えるため、少し遅延させてから実行
