@@ -1,0 +1,59 @@
+name: 'Setup CLASP'
+description: 'CLASPのセットアップと認証情報の作成を行う'
+
+inputs:
+  access_token:
+    description: 'Google OAuth access token'
+    required: true
+  refresh_token:
+    description: 'Google OAuth refresh token'
+    required: true
+  id_token:
+    description: 'Google OAuth ID token'
+    required: true
+  client_id:
+    description: 'Google OAuth client ID'
+    required: true
+  client_secret:
+    description: 'Google OAuth client secret'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      shell: bash
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+      shell: bash
+
+    - name: Install CLASP
+      run: npm install -g @google/clasp
+      shell: bash
+
+    - name: Create clasp credentials
+      run: |
+        cat <<EOF > ~/.clasprc.json
+        {
+          "token": {
+            "access_token": "${{ inputs.access_token }}",
+            "refresh_token": "${{ inputs.refresh_token }}",
+            "scope": "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/service.management https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/script.webapp.deploy https://www.googleapis.com/auth/userinfo.profile openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/drive.metadata.readonly",
+            "token_type": "Bearer",
+            "id_token": "${{ inputs.id_token }}",
+            "expiry_date": 1595752666211
+          },
+          "oauth2ClientSettings": {
+            "clientId": "${{ inputs.client_id }}",
+            "clientSecret": "${{ inputs.client_secret }}",
+            "redirectUri": "http://localhost"
+          },
+          "isLocalCreds": false
+        }
+        EOF
+      shell: bash
+
