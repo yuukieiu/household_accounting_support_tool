@@ -25,7 +25,7 @@
       z-index: 9999;
     }
     .submit-loading-overlay.active {
-      display: flex;
+      display: flex !important;
     }
     .submit-spinner {
       border: 8px solid #f3f3f3;
@@ -38,6 +38,11 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+    .submit-btn-disabled {
+      background-color: #9ca3af !important;
+      cursor: not-allowed !important;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -104,7 +109,7 @@
       </div>
 
       <!-- 登録ボタン -->
-      <button id="submitBtn" onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl disabled:bg-gray-400 disabled:cursor-not-allowed">
+      <button id="submitBtn" onclick="submitData()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-12 rounded-xl text-5xl">
         登録
       </button>
 
@@ -212,6 +217,16 @@
       const submitBtn = document.getElementById("submitBtn");
       const submitLoadingOverlay = document.getElementById("submitLoadingOverlay");
 
+      // 要素の存在確認
+      if (!submitBtn) {
+        console.error("submitBtnが見つかりません");
+        return;
+      }
+      if (!submitLoadingOverlay) {
+        console.error("submitLoadingOverlayが見つかりません");
+        return;
+      }
+
       [dateEl,paymentEl,purposeEl,amountEl,descriptionEl].forEach(el => el.classList.remove("error"));
 
       if(!dateEl.value) { dateEl.classList.add("error"); valid = false; }
@@ -226,6 +241,8 @@
 
       // 登録ボタンを非活性化し、ローディングオーバーレイを表示
       submitBtn.disabled = true;
+      submitBtn.classList.add("submit-btn-disabled");
+      submitLoadingOverlay.style.display = "flex";
       submitLoadingOverlay.classList.add("active");
 
       let debitName, creditName;
@@ -242,6 +259,8 @@
         } catch(e) { console.error(e); }
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
         submitBtn.disabled = false;
+        submitBtn.classList.remove("submit-btn-disabled");
+        submitLoadingOverlay.style.display = "none";
         submitLoadingOverlay.classList.remove("active");
       };
 
@@ -251,6 +270,8 @@
         showToast("登録に失敗しました");
         // 登録ボタンを再有効化し、ローディングオーバーレイを非表示
         submitBtn.disabled = false;
+        submitBtn.classList.remove("submit-btn-disabled");
+        submitLoadingOverlay.style.display = "none";
         submitLoadingOverlay.classList.remove("active");
       };
 
