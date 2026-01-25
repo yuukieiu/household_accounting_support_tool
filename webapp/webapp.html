@@ -33,7 +33,7 @@
   <!-- 入力フォーム -->
   <div class="pt-[360px] px-12 space-y-12 mb-24">
     <div class="bg-white shadow-2xl rounded-xl p-12 space-y-12">
-      
+
       <!-- 取引タイプ（トグルボタン） -->
       <div>
         <div class="mt-6 flex space-x-24">
@@ -131,10 +131,17 @@
       hideLoadingIfReady();
     }).getSpreadsheetInfo();
 
-    // 🔹 アカウント情報取得
-    google.script.run.withSuccessHandler(function(accounts){
-      const paymentList = accounts.filter(acc => ["資産","負債","純資産"].includes(acc.category));
-      const purposeList = accounts.filter(acc => ["費用","収益","純資産","負債"].includes(acc.category));
+    // 設定値と勘定科目一覧を取得
+    let paymentCategories = [], purposeCategories = [];
+
+    google.script.run.withSuccessHandler(function(config){
+      paymentCategories = config.paymentCategories;
+      purposeCategories = config.purposeCategories;
+
+      // 勘定科目一覧を取得
+      google.script.run.withSuccessHandler(function(accounts){
+        const paymentList = accounts.filter(acc => paymentCategories.includes(acc.category));
+        const purposeList = accounts.filter(acc => purposeCategories.includes(acc.category));
 
       const paymentSelect = document.getElementById("payment");
       const purposeSelect = document.getElementById("purpose");
@@ -156,9 +163,10 @@
         purposeSelect.appendChild(o);
       });
 
-      accountsLoaded = true;
-      hideLoadingIfReady();
-    }).getAccounts();
+        accountsLoaded = true;
+        hideLoadingIfReady();
+      }).getAccounts();
+    }).getFrontendConfig();
 
     function showToast(msg) {
       const container = document.getElementById("toast-container");

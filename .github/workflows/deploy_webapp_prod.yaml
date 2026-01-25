@@ -19,6 +19,12 @@ jobs:
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
 
+      - name: Copy common/config.js to webapp directory
+        run: |
+          # common/config.jsをwebappディレクトリにコピー
+          cp common/config.js webapp/config.js
+          echo "common/config.jsをwebappディレクトリにコピーしました"
+
       - name: Create .clasp.json for production
         run: |
           cat > webapp/.clasp.json <<EOF

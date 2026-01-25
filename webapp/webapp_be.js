@@ -17,3 +17,11 @@ function getSpreadsheetInfo() {
     url: ss.getUrl()
   };
 }
+
+// フロントエンド用の設定値を取得
+function getFrontendConfig() {
+  return {
+    paymentCategories: PAYMENT_CATEGORIES,
+    purposeCategories: PURPOSE_CATEGORIES
+  };
+}
