@@ -55,5 +55,5 @@ jobs:
           clasp push -f
 
           # 既存デプロイを更新（Webアプリケーションとして）
-          clasp deploy --deploymentId ${{ secrets.PROD_CLASP_DEPLOYMENT_ID }} --type webapp
+          clasp update-deployment ${{ secrets.PROD_CLASP_DEPLOYMENT_ID }}
 

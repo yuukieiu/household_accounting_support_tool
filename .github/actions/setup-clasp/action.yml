@@ -26,8 +26,8 @@ runs:
       with:
         node-version: '22'
 
-    - name: Install CLASP (lock to v2.x)
-      run: npm install -g @google/clasp@2
+    - name: Install CLASP
+      run: npm install -g @google/clasp
       shell: bash
 
     - name: Create clasp credentials
