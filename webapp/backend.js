@@ -25,12 +25,12 @@ function addJournalEntry(entry) {
   const lastRow = sheet.getLastRow() + 1;
 
   sheet.getRange(lastRow, 3).setValue(entry.date);        // 取引日
-  sheet.getRange(lastRow, 4).setFormula(`=query('勘定科目'!$B$2:$C$1004,"select B where C = '${entry.debitName}'")`);
+  sheet.getRange(lastRow, 4).setFormula(`=query('勘定科目'!$B$2:$C$1004,"select B where C = '" & E${lastRow} & "'")`);
   sheet.getRange(lastRow, 5).setValue(entry.debitName);   // 借方科目
   sheet.getRange(lastRow, 6).setValue(entry.debitAmount); // 借方金額
-  sheet.getRange(lastRow, 7).setFormula(`=query('勘定科目'!$B$2:$C$1004,"select B where C = '${entry.creditName}'")`);
+  sheet.getRange(lastRow, 7).setFormula(`=query('勘定科目'!$B$2:$C$1004,"select B where C = '" & H${lastRow} & "'")`);
   sheet.getRange(lastRow, 8).setValue(entry.creditName);  // 貸方科目
-  sheet.getRange(lastRow, 9).setValue(entry.debitAmount); // 貸方金額
+  sheet.getRange(lastRow, 9).setFormula(`=F${lastRow}`); // 貸方金額（借方金額を参照）
   sheet.getRange(lastRow, 10).setValue(entry.description); // 摘要
 
   // 自動関数系
