@@ -30,7 +30,7 @@ jobs:
           cat > webapp/.clasp.json <<EOF
           {
             "scriptId": "${{ secrets.PROD_CLASP_SCRIPT_ID }}",
-            "rootDir": "",
+            "rootDir": ".",
             "scriptExtensions": [
               ".js",
               ".gs"
