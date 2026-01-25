@@ -18,11 +18,11 @@ function showSidebar() {
 function createOnOpenTriggerOnce() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const props = PropertiesService.getScriptProperties();
-  if (props.getProperty("TRIGGER_CREATED")) return; // すでに作成済みならスキップ
+  if (props.getProperty(PROPERTY_KEYS.TRIGGER_CREATED)) return; // すでに作成済みならスキップ
 
   // 現在のスプレッドシートのIDをMASTER_SHEET_IDとして設定
   const currentSheetId = ss.getId();
-  props.setProperty("MASTER_SHEET_ID", currentSheetId);
+  props.setProperty(PROPERTY_KEYS.MASTER_SHEET_ID, currentSheetId);
 
   // 設定完了を通知
   const ui = SpreadsheetApp.getUi();
@@ -38,7 +38,7 @@ function createOnOpenTriggerOnce() {
     .onOpen()
     .create();
 
-  props.setProperty("TRIGGER_CREATED", "true"); // 作成済みフラグを設定
+  props.setProperty(PROPERTY_KEYS.TRIGGER_CREATED, "true"); // 作成済みフラグを設定
 
   ui.alert('完了', 'トリガーが正常に作成されました。', ui.ButtonSet.OK);
 }

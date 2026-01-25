@@ -19,11 +19,12 @@ jobs:
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
 
-      - name: Copy backend.js to installer directory
+      - name: Copy backend.js and config.js to installer directory
         run: |
-          # backend.jsをinstallerディレクトリにコピー
+          # backend.jsとcommon/config.jsをinstallerディレクトリにコピー
           cp webapp/backend.js installer/backend.js
-          echo "backend.jsをinstallerディレクトリにコピーしました"
+          cp common/config.js installer/config.js
+          echo "backend.jsとcommon/config.jsをinstallerディレクトリにコピーしました"
 
       - name: Create & Push Bound Apps Script
         run: |

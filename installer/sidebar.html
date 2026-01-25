@@ -145,9 +145,17 @@
       }
     });
 
-    google.script.run.withSuccessHandler(function(accounts){
-      const paymentList = accounts.filter(acc => ["資産","負債","純資産"].includes(acc.category));
-      const purposeList = accounts.filter(acc => ["費用","収益","純資産","負債"].includes(acc.category));
+    // 設定値と勘定科目一覧を取得
+    let paymentCategories = [], purposeCategories = [];
+
+    google.script.run.withSuccessHandler(function(config){
+      paymentCategories = config.paymentCategories;
+      purposeCategories = config.purposeCategories;
+
+      // 勘定科目一覧を取得
+      google.script.run.withSuccessHandler(function(accounts){
+        const paymentList = accounts.filter(acc => paymentCategories.includes(acc.category));
+        const purposeList = accounts.filter(acc => purposeCategories.includes(acc.category));
 
       const paymentSelect = document.getElementById("payment");
       const purposeSelect = document.getElementById("purpose");
@@ -169,9 +177,10 @@
         purposeSelect.appendChild(o);
       });
 
-      paymentChoice = new Choices(paymentSelect, { searchEnabled: true, removeItemButton: false });
-      purposeChoice = new Choices(purposeSelect, { searchEnabled: true, removeItemButton: false });
-    }).getAccounts();
+        paymentChoice = new Choices(paymentSelect, { searchEnabled: true, removeItemButton: false });
+        purposeChoice = new Choices(purposeSelect, { searchEnabled: true, removeItemButton: false });
+      }).getAccounts();
+    }).getFrontendConfig();
 
     function showToast(msg) {
       const container = document.getElementById("toast-container");
